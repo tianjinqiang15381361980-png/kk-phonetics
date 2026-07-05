@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KK音標表 - 美式發音學習</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --card-hover: #252545;
+    --accent: #7c5cfc;
+    --accent-glow: rgba(124, 92, 252, 0.3);
+    --text: #e8e8f0;
+    --text-dim: #8888aa;
+    --vowel: #5b8def;
+    --vowel-bg: rgba(91, 141, 239, 0.12);
+    --diphthong: #48c6b0;
+    --diphthong-bg: rgba(72, 198, 176, 0.12);
+    --consonant: #f59e42;
+    --consonant-bg: rgba(245, 158, 66, 0.12);
+    --rhotic: #e86fcf;
+    --rhotic-bg: rgba(232, 111, 207, 0.12);
+    --overlay: rgba(0,0,0,0.7);
+    --modal-bg: #1a1a2e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  header {
+    text-align: center;
+    padding: 48px 20px 32px;
+    position: relative;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #7c5cfc, #48c6b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+  }
+  header p {
+    color: var(--text-dim);
+    margin-top: 8px;
+    font-size: 1rem;
+  }
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+  .section { margin-bottom: 36px; }
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+  .badge-vowel { background: var(--vowel-bg); color: var(--vowel); }
+  .badge-diphthong { background: var(--diphthong-bg); color: var(--diphthong); }
+  .badge-consonant { background: var(--consonant-bg); color: var(--consonant); }
+  .badge-rhotic { background: var(--rhotic-bg); color: var(--rhotic); }
+  .subgroup-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin: 14px 0 8px;
+    padding-left: 4px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+  }
+  .grid-wide { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover {
+    background: var(--card-hover);
+    transform: translateY(-2px);
+    border-color: rgba(124, 92, 252, 0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .card:active { transform: scale(0.96); }
+  .card .symbol {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: 'Times New Roman', 'IPA Mincho', serif;
+    display: block;
+    line-height: 1.3;
+    position: relative;
+    z-index: 1;
+  }
+  .card .example {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  .card-vowel .symbol { color: var(--vowel); }
+  .card-vowel:hover { border-color: rgba(91, 141, 239, 0.3); }
+  .card-diphthong .symbol { color: var(--diphthong); }
+  .card-diphthong:hover { border-color: rgba(72, 198, 176, 0.3); }
+  .card-consonant .symbol { color: var(--consonant); }
+  .card-consonant:hover { border-color: rgba(245, 158, 66, 0.3); }
+  .card-rhotic .symbol { color: var(--rhotic); }
+  .card-rhotic:hover { border-color: rgba(232, 111, 207, 0.3); }
+  .card.playing {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 24px var(--accent-glow) !important;
+  }
+  .card.playing .symbol { color: var(--accent) !important; }
+  .card .play-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.15);
+    transition: color 0.2s;
+    z-index: 1;
+  }
+  .card:hover .play-icon { color: rgba(255,255,255,0.35); }
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .stat-item .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .controls-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .btn-play-all {
+    background: linear-gradient(135deg, var(--accent), #48c6b0);
+    border: none;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 12px 36px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 4px 20px rgba(124, 92, 252, 0.25);
+  }
+  .btn-play-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(124, 92, 252, 0.4);
+  }
+  .btn-play-all:active { transform: scale(0.97); }
+  .btn-play-all:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .speed-label { font-size: 0.8rem; color: var(--text-dim); }
+  .speed-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .speed-btn:hover { border-color: var(--accent); color: var(--text); }
+  .speed-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .sub-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; }
+  .sub-label {
+    font-size: 0.65rem;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .label-voiced { background: rgba(72, 198, 176, 0.15); color: #48c6b0; }
+  .label-unvoiced { background: rgba(239, 107, 107, 0.15); color: #ef6b6b; }
+  .kk-bracket {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.1);
+    font-family: monospace;
+    z-index: 1;
+  }
+  .card:hover .kk-bracket { color: rgba(255,255,255,0.25); }
+  footer { text-align: center; padding: 32px 20px; color: var(--text-dim); font-size: 0.8rem; }
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--modal-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 32px;
+    position: relative;
+    animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+  .modal-symbol {
+    font-size: 3.6rem;
+    font-weight: 700;
+    font-family: 'Times New Roman', 'IPA Mincho', serif;
+    text-align: center;
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+  .modal-symbol.vowel-color { color: var(--vowel); }
+  .modal-symbol.diphthong-color { color: var(--diphthong); }
+  .modal-symbol.consonant-color { color: var(--consonant); }
+  .modal-symbol.rhotic-color { color: var(--rhotic); }
+  .modal-category { text-align: center; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 6px; }
+  .modal-type-badge { display: inline-block; font-size: 0.7rem; padding: 2px 12px; border-radius: 12px; font-weight: 600; margin-bottom: 16px; }
+  .modal-desc {
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  .modal-section-label { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; }
+  .modal-letter-combos { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .letter-combo { padding: 3px 10px; border-radius: 6px; background: rgba(124, 92, 252, 0.12); color: var(--accent); font-size: 0.85rem; font-family: monospace; }
+  .modal-examples { display: flex; flex-wrap: wrap; gap: 8px; }
+  .example-word {
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+  .example-word:hover { background: var(--card-hover); border-color: var(--accent); color: var(--accent); }
+  .example-word.playing { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+  .note {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: -16px;
+    margin-bottom: 24px;
+  }
+  .tts-note {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+    opacity: 0.7;
+  }
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.8rem; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+    .grid-wide { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .card { padding: 12px 8px; }
+    .card .symbol { font-size: 1.6rem; }
+    .modal { padding: 24px 20px; }
+    .modal-symbol { font-size: 2.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>KK 音標表</h1>
+  <p>Kenyon & Knott 美式發音 · 點卡片聽發音 · 開啟詳情看例詞</p>
+</header>
+
+<div class="container">
+  <div class="stats">
+    <span class="stat-item"><span class="dot" style="background:var(--vowel)"></span> 14 個單母音</span>
+    <span class="stat-item"><span class="dot" style="background:var(--diphthong)"></span> 3 個雙母音</span>
+    <span class="stat-item"><span class="dot" style="background:var(--consonant)"></span> 24 個子音</span>
+    <span class="stat-item">🇺🇸 KK 音標 · 共 41 個</span>
+  </div>
+
+  <div class="controls-row">
+    <button class="btn-play-all" id="playAllBtn">▶ 全部連讀</button>
+    <div class="speed-control">
+      <span class="speed-label">語速</span>
+      <button class="speed-btn" data-rate="0.5">慢</button>
+      <button class="speed-btn active" data-rate="0.75">中</button>
+      <button class="speed-btn" data-rate="1.0">快</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">
+      母音 Vowels <span class="badge badge-vowel">14</span>
+    </div>
+    <div id="vowelGrid"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">
+      雙母音 Diphthongs <span class="badge badge-diphthong">3</span>
+    </div>
+    <div id="diphthongGrid"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">
+      子音 Consonants <span class="badge badge-consonant">24</span>
+    </div>
+    <div id="consonantGrid"></div>
+  </div>
+
+  <footer>
+    KK 音標 (Kenyon & Knott) · 美式發音錄音 · 點擊例詞即聽
+  </footer>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">&times;</button>
+    <div class="modal-symbol" id="modalSymbol"></div>
+    <div class="modal-category" id="modalCategory"></div>
+    <div id="modalTypeBadge"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+    <div id="modalLetterCombos"></div>
+    <div class="modal-section-label">例詞（點擊發音）</div>
+    <div class="modal-examples" id="modalExamples"></div>
+  </div>
+</div>
+
+<script>
+// ─── Speed ────────────────────────────────────────────
+let currentRate = 0.75;
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentRate = parseFloat(btn.dataset.rate);
+  });
+});
+
+// ─── Data ────────────────────────────────────────────
+const VOWELS = [
+  { sym: 'i', aid: 'vowel_green', group: '前母音 Front',
+    desc: '舌抵下齒，雙唇扁平，發長"ee"音。字母組合：ee, ea, e, ie, ei',
+    combos: 'ee ea e ie ei',
+    examples: ['green','see','eat','sheep','tree','meet','tea','leave'] },
+  { sym: 'ɪ', aid: 'vowel_pink', group: '前母音 Front',
+    desc: '舌抵下齒，雙唇扁平分開，牙床近於全合，發短促音。字母組合：i, y, e, ui',
+    combos: 'i y e ui',
+    examples: ['pink','sit','it','big','six','pig','miss','happy'] },
+  { sym: 'e', aid: 'diphthong_jade', group: '前母音 Front',
+    desc: '由"eh"滑向"ee"，雙唇扁平。KK 音標寫作 /e/，實際發音為 [eɪ]。字母組合：a, ay, ea, ai, ey',
+    combos: 'a ay ea ai ey',
+    examples: ['cake','name','play','day','rain','they','great','say'] },
+  { sym: 'ɛ', aid: 'vowel_red', group: '前母音 Front',
+    desc: '舌近硬腭，舌尖抵下齒，牙床半開，發短促"eh"音。字母組合：e, ea, a',
+    combos: 'e ea a',
+    examples: ['red','bed','head','elephant','better','many','yes'] },
+  { sym: 'æ', aid: 'vowel_sand', group: '前母音 Front',
+    desc: '雙唇扁平，舌前微升，牙床全開，發"aa"音。字母組合：a',
+    combos: 'a',
+    examples: ['sand','cat','hat','map','hand','black','man','bag'] },
+  { sym: 'ʌ', aid: 'vowel_dust', group: '中母音 Central',
+    desc: '舌中部抬起，牙床半開，短促用力。與 /ə/ 同音但重讀。字母組合：u, o, ou',
+    combos: 'u o ou',
+    examples: ['cup','bus','sun','love','up','but','young','trouble'] },
+  { sym: 'ə', aid: 'vowel_dust', group: '中母音 Central',
+    desc: '舌上抬，唇自然，口半開，發短"uh"音（常出現在非重讀音節）。字母組合：a, e, o, u, er, or',
+    combos: 'a e o u er or',
+    examples: ['about','banana','teacher','doctor','today','around','sofa'] },
+  { sym: 'ɝ', aid: 'vowel_purple', group: '捲舌母音 R-colored',
+    desc: '舌上抬，舌尖捲起，發捲舌"er"音（重讀）。字母組合：ir, ur, er, or, ear',
+    combos: 'ir ur er or ear',
+    examples: ['bird','turn','learn','work','world','girl','nurse','purple'] },
+  { sym: 'ɚ', aid: '', group: '捲舌母音 R-colored',
+    desc: '舌上抬，舌尖輕微捲起，發輕柔捲舌"er"音（非重讀）。字母組合：er, or, ar, ure',
+    combos: 'er or ar ure',
+    examples: ['butter','doctor','teacher','sister','color','sugar','measure'] },
+  { sym: 'u', aid: 'vowel_blue', group: '後母音 Back',
+    desc: '雙唇成圓形，牙床近於半合，發長"oo"音。字母組合：oo, o, u, ew',
+    combos: 'oo o u ew',
+    examples: ['blue','food','moon','shoe','true','two','school','do'] },
+  { sym: 'ʊ', aid: 'vowel_wood', group: '後母音 Back',
+    desc: '雙唇成圓形，牙床接近半合，發短促"uu"音。字母組合：oo, ou, u, o',
+    combos: 'oo ou u o',
+    examples: ['wood','book','good','look','foot','put','could','woman'] },
+  { sym: 'o', aid: 'diphthong_gold', group: '後母音 Back',
+    desc: '由"oh"滑向"uu"，唇由開變圓。KK 音標寫作 /o/，實際發音為 [oʊ]。字母組合：o, ow, oa, oe',
+    combos: 'o ow oa oe',
+    examples: ['gold','go','home','no','know','boat','show','cold'] },
+  { sym: 'ɔ', aid: 'vowel_mauve', group: '後母音 Back',
+    desc: '雙唇收圓突出，牙床半開，發"aw"音。字母組合：al, or, au, aw, ou',
+    combos: 'al or au aw ou',
+    examples: ['call','more','caught','law','four','ball','door','dog'] },
+  { sym: 'ɑ', aid: 'vowel_coffee', group: '後母音 Back',
+    desc: '雙唇張而不圓，牙床大開，發長"ah"音。字母組合：a, ar, o',
+    combos: 'a ar o',
+    examples: ['coffee','hot','father','car','farm','watch','want','calm'] },
+];
+
+const DIPHTHONGS = [
+  { sym: 'aɪ', aid: 'diphthong_lime',
+    desc: '由"ah"滑向"ee"，口張再合。字母組合：i, y, igh, ie',
+    combos: 'i y igh ie',
+    examples: ['lime','time','my','light','high','fly','bike','night'] },
+  { sym: 'aʊ', aid: 'diphthong_brown',
+    desc: '由"ah"滑向"uu"，口形由大變小。字母組合：ou, ow',
+    combos: 'ou ow',
+    examples: ['brown','house','out','now','down','loud','how','town'] },
+  { sym: 'ɔɪ', aid: 'diphthong_turquoise',
+    desc: '由"aw"滑向"ee"，唇由圓變扁。字母組合：oy, oi',
+    combos: 'oy oi',
+    examples: ['boy','toy','voice','oil','choice','joy'] },
+];
+
+const CONSONANTS = [
+  { sym: 'p', aid: 'consonant_pig', group: '爆破音 Stops', voiced: false,
+    desc: '雙唇緊閉然後突然放開，氣流衝出，聲帶不震動。',
+    examples: ['pig','pen','panda','party','put','cup'] },
+  { sym: 'b', aid: 'consonant_bear', group: '爆破音 Stops', voiced: true,
+    desc: '雙唇緊閉然後突然放開，氣流衝出，聲帶震動。',
+    examples: ['bear','bed','bird','big','bathroom','cab'] },
+  { sym: 't', aid: 'consonant_turtle', group: '爆破音 Stops', voiced: false,
+    desc: '舌尖抵住上齒齦然後突然放開，氣流衝出，聲帶不震動。',
+    examples: ['turtle','tea','tooth','teach','tell','cat'] },
+  { sym: 'd', aid: 'consonant_dog', group: '爆破音 Stops', voiced: true,
+    desc: '舌尖抵住上齒齦然後突然放開，氣流衝出，聲帶震動。',
+    examples: ['dog','dad','day','doll','dark','bed'] },
+  { sym: 'k', aid: 'consonant_cat', group: '爆破音 Stops', voiced: false,
+    desc: '舌後部抵住軟腭然後突然放開，氣流衝出，聲帶不震動。',
+    examples: ['cat','kind','keep','sock','duck','cake'] },
+  { sym: 'ɡ', aid: 'consonant_goat', group: '爆破音 Stops', voiced: true,
+    desc: '舌後部抵住軟腭然後突然放開，氣流衝出，聲帶震動。',
+    examples: ['goat','girl','gift','glad','bag','go'] },
+  { sym: 'f', aid: 'consonant_frog', group: '摩擦音 Fricatives', voiced: false,
+    desc: '下唇輕觸上齒，氣流從唇齒間摩擦而出，聲帶不震動。',
+    examples: ['frog','five','foot','food','four','life'] },
+  { sym: 'v', aid: 'consonant_beaver', group: '摩擦音 Fricatives', voiced: true,
+    desc: '下唇輕觸上齒，氣流從唇齒間摩擦而出，聲帶震動。',
+    examples: ['beaver','very','visit','view','five','save'] },
+  { sym: 'θ', aid: 'consonant_panther', group: '摩擦音 Fricatives', voiced: false,
+    desc: '舌尖輕觸上齒背，氣流從舌齒間摩擦而出，聲帶不震動。',
+    examples: ['panther','think','three','thank','mouth','birthday'] },
+  { sym: 'ð', aid: 'consonant_feather', group: '摩擦音 Fricatives', voiced: true,
+    desc: '舌尖輕觸上齒背，氣流從舌齒間摩擦而出，聲帶震動。',
+    examples: ['feather','this','mother','those','with','there'] },
+  { sym: 's', aid: 'consonant_snake', group: '摩擦音 Fricatives', voiced: false,
+    desc: '舌尖接近上齒齦，氣流從舌尖與齒齦間摩擦而出，聲帶不震動。',
+    examples: ['snake','six','sing','sit','soup','cats'] },
+  { sym: 'z', aid: 'consonant_zebra', group: '摩擦音 Fricatives', voiced: true,
+    desc: '舌尖接近上齒齦，氣流從舌尖與齒齦間摩擦而出，聲帶震動。',
+    examples: ['zebra','zoo','zero','his','rose','dogs'] },
+  { sym: 'ʃ', aid: 'consonant_sheep', group: '摩擦音 Fricatives', voiced: false,
+    desc: '舌身抬起接近硬腭，氣流從舌與硬腭間摩擦而出，聲帶不震動。',
+    examples: ['sheep','ship','wash','show','shop','fish'] },
+  { sym: 'ʒ', aid: 'consonant_television', group: '摩擦音 Fricatives', voiced: true,
+    desc: '舌身抬起接近硬腭，氣流從舌與硬腭間摩擦而出，聲帶震動。',
+    examples: ['television','measure','pleasure','vision'] },
+  { sym: 'h', aid: 'consonant_horse', group: '摩擦音 Fricatives', voiced: false,
+    desc: '氣流從聲門摩擦而出，聲帶不震動，口型隨後面母音變化。',
+    examples: ['horse','hat','help','hope','who','whose'] },
+  { sym: 'tʃ', aid: 'consonant_chicken', group: '破擦音 Affricates', voiced: false,
+    desc: '舌尖抵住上齒齦然後緩緩放開，氣流摩擦而出，聲帶不震動。',
+    examples: ['chicken','chair','children','China','teach'] },
+  { sym: 'dʒ', aid: 'consonant_giraffe', group: '破擦音 Affricates', voiced: true,
+    desc: '舌尖抵住上齒齦然後緩緩放開，氣流摩擦而出，聲帶震動。',
+    examples: ['giraffe','jeep','jump','judge','just','jacket'] },
+  { sym: 'm', aid: 'consonant_mouse', group: '鼻音 Nasals', voiced: true,
+    desc: '雙唇緊閉，氣流從鼻腔通過，聲帶震動。',
+    examples: ['mouse','moon','mother','make','milk','name'] },
+  { sym: 'n', aid: 'consonant_dinosaur', group: '鼻音 Nasals', voiced: true,
+    desc: '舌尖抵住上齒齦，氣流從鼻腔通過，聲帶震動。',
+    examples: ['dinosaur','nose','noon','need','new','man'] },
+  { sym: 'ŋ', aid: 'consonant_penguin', group: '鼻音 Nasals', voiced: true,
+    desc: '舌後部抬起抵住軟腭，氣流從鼻腔通過，聲帶震動。',
+    examples: ['penguin','sing','song','ring','going','think','thank'] },
+  { sym: 'l', aid: 'consonant_lion', group: '舌側音 Liquids', voiced: true,
+    desc: '舌尖抵住上齒齦，氣流從舌兩側通過，聲帶震動。',
+    examples: ['lion','light','late','lady','ball','little'] },
+  { sym: 'r', aid: 'consonant_rabbit', group: '無摩擦通音 Liquids', voiced: true,
+    desc: '舌尖捲向齒齦後部，舌身成凹形，雙唇略突出（美式捲舌音）。KK 音標寫作 /r/。',
+    examples: ['rabbit','red','write','right','car','four'] },
+  { sym: 'j', aid: 'consonant_yak', group: '半母音 Glides', voiced: true,
+    desc: '舌前部向硬腭抬起，雙唇扁平，聲帶震動。',
+    examples: ['yak','yes','yellow','you','young','use'] },
+  { sym: 'w', aid: 'consonant_wolf', group: '半母音 Glides', voiced: true,
+    desc: '舌後部向軟腭抬起，雙唇收圓突出，聲帶震動。',
+    examples: ['wolf','we','week','watch','woman','where'] },
+];
+
+// ─── Render ───────────────────────────────────────────
+function getColorClass(item, type) {
+  if (type === 'vowel') return 'card-vowel';
+  if (type === 'diphthong') return 'card-diphthong';
+  if (type === 'consonant') return 'card-consonant';
+  return 'card-consonant';
+}
+
+function getSymbolColor(item, type) {
+  if (type === 'vowel') return 'vowel-color';
+  if (type === 'diphthong') return 'diphthong-color';
+  if (type === 'consonant') return 'consonant-color';
+  return 'consonant-color';
+}
+
+function renderGroup(data, containerId, type) {
+  const container = document.getElementById(containerId);
+  const groups = {};
+  data.forEach(item => {
+    const g = item.group || '';
+    (groups[g] = groups[g] || []).push(item);
+  });
+
+  let html = '';
+  for (const [groupName, items] of Object.entries(groups)) {
+    if (groupName) html += `<div class="subgroup-title">${groupName}</div>`;
+    html += `<div class="grid grid-wide">`;
+    items.forEach(item => {
+      const typeHtml = item.voiced !== undefined
+        ? `<span class="sub-label ${item.voiced ? 'label-voiced' : 'label-unvoiced'}">${item.voiced ? '有聲' : '無聲'}</span>`
+        : '';
+      const ttsNote = !item.aid ? '<div class="tts-note">TTS 合成音</div>' : '';
+      html += `<div class="card ${getColorClass(item, type)}" data-sym="${item.sym}">
+        <span class="kk-bracket">[${item.sym}]</span>
+        <span class="play-icon">🔊</span>
+        <span class="symbol">${item.sym}</span>
+        <div class="example">${item.examples[0]}</div>
+        <div class="sub-row">${typeHtml}</div>
+        ${ttsNote}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+renderGroup(VOWELS, 'vowelGrid', 'vowel');
+renderGroup(DIPHTHONGS, 'diphthongGrid', 'diphthong');
+renderGroup(CONSONANTS, 'consonantGrid', 'consonant');
+
+// ─── Audio ───────────────────────────────────────────
+const audioEl = new Audio();
+
+function getUSVoice() {
+  const voices = speechSynthesis.getVoices();
+  return voices.find(v => v.lang.startsWith('en-US')) || voices.find(v => /en-/.test(v.lang)) || null;
+}
+
+function speakText(text) {
+  return new Promise((resolve) => {
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = currentRate;
+    const voice = getUSVoice();
+    if (voice) utterance.voice = voice;
+    utterance.onend = resolve;
+    utterance.onerror = resolve;
+    speechSynthesis.speak(utterance);
+  });
+}
+
+function speakPhoneme(sym) {
+  return new Promise((resolve) => {
+    speechSynthesis.cancel();
+    let text = sym;
+    if (sym === 'ɚ') text = 'er';
+    if (sym === 'ɝ') text = 'er';
+    if (sym === 'ŋ') text = 'ing';
+    if (sym === 'ð') text = 'the';
+    if (sym === 'θ') text = 'th';
+    if (sym === 'ʃ') text = 'sh';
+    if (sym === 'ʒ') text = 'zh';
+    if (sym === 'tʃ') text = 'ch';
+    if (sym === 'dʒ') text = 'j';
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = currentRate;
+    const voice = getUSVoice();
+    if (voice) utterance.voice = voice;
+    utterance.onend = resolve;
+    utterance.onerror = resolve;
+    speechSynthesis.speak(utterance);
+  });
+}
+
+async function playPhoneme(item) {
+  if (item.aid) {
+    return new Promise((resolve) => {
+      const card = document.querySelector(`.card[data-sym="${item.sym}"]`);
+      if (card) card.classList.add('playing');
+      audioEl.src = `audio-american/${item.aid}.mp3`;
+      audioEl.playbackRate = currentRate;
+      audioEl.onended = () => { if (card) card.classList.remove('playing'); resolve(); };
+      audioEl.onerror = () => { if (card) card.classList.remove('playing'); resolve(); };
+      audioEl.play().catch(() => { if (card) card.classList.remove('playing'); resolve(); });
+    });
+  } else {
+    const card = document.querySelector(`.card[data-sym="${item.sym}"]`);
+    if (card) card.classList.add('playing');
+    await speakPhoneme(item.sym);
+    if (card) card.classList.remove('playing');
+  }
+}
+
+let isPlaying = false;
+
+// ─── Card click ──────────────────────────────────────
+function findItem(sym) {
+  for (const list of [VOWELS, DIPHTHONGS, CONSONANTS]) {
+    const found = list.find(p => p.sym === sym);
+    if (found) return found;
+  }
+  return null;
+}
+
+const modal = document.getElementById('modal');
+const modalSymbol = document.getElementById('modalSymbol');
+const modalCategory = document.getElementById('modalCategory');
+const modalTypeBadge = document.getElementById('modalTypeBadge');
+const modalDesc = document.getElementById('modalDesc');
+const modalLetterCombos = document.getElementById('modalLetterCombos');
+const modalExamples = document.getElementById('modalExamples');
+
+function getType(sym) {
+  if (VOWELS.find(p => p.sym === sym)) return 'vowel';
+  if (DIPHTHONGS.find(p => p.sym === sym)) return 'diphthong';
+  return 'consonant';
+}
+
+function openModal(item) {
+  const type = getType(item.sym);
+  modalSymbol.className = `modal-symbol ${getSymbolColor(item, type)}`;
+  modalSymbol.textContent = item.sym;
+
+  modalCategory.textContent = item.group ? `${item.group} · ${type === 'vowel' ? '母音' : type === 'diphthong' ? '雙母音' : '子音'}` : (type === 'vowel' ? '母音' : type === 'diphthong' ? '雙母音' : '子音');
+
+  if (item.voiced !== undefined) {
+    modalTypeBadge.innerHTML = `<span class="modal-type-badge" style="background:${item.voiced ? 'rgba(72,198,176,0.15)' : 'rgba(239,107,107,0.15)'};color:${item.voiced ? '#48c6b0' : '#ef6b6b'}">${item.voiced ? '有聲子音' : '無聲子音'}</span>`;
+  } else {
+    modalTypeBadge.innerHTML = '';
+  }
+
+  modalDesc.textContent = item.desc;
+
+  if (item.combos) {
+    modalLetterCombos.innerHTML = `<div class="modal-section-label">常見字母組合</div><div class="modal-letter-combos">${
+      item.combos.split(' ').map(c => `<span class="letter-combo">${c}</span>`).join('')
+    }</div>`;
+  } else {
+    modalLetterCombos.innerHTML = '';
+  }
+
+  modalExamples.innerHTML = item.examples.map(w =>
+    `<span class="example-word" data-word="${w}">${w}</span>`
+  ).join('');
+
+  modalExamples.querySelectorAll('.example-word').forEach(el => {
+    el.addEventListener('click', async () => {
+      if (isPlaying) return;
+      document.querySelectorAll('.example-word').forEach(e => e.classList.remove('playing'));
+      el.classList.add('playing');
+      await speakText(el.dataset.word);
+      el.classList.remove('playing');
+    });
+  });
+
+  modal.classList.add('open');
+}
+
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('click', async () => {
+    if (isPlaying) return;
+    const sym = card.dataset.sym;
+    const item = findItem(sym);
+    if (item) {
+      openModal(item);
+      await playPhoneme(item);
+    }
+  });
+});
+
+document.getElementById('modalClose').addEventListener('click', () => modal.classList.remove('open'));
+modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+
+// ─── Play All ────────────────────────────────────────
+document.getElementById('playAllBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('playAllBtn');
+  if (isPlaying) return;
+  isPlaying = true;
+  btn.disabled = true;
+  btn.textContent = '⏳ 播放中...';
+
+  const allData = [...VOWELS, ...DIPHTHONGS, ...CONSONANTS];
+  for (const item of allData) {
+    await playPhoneme(item);
+    await new Promise(r => setTimeout(r, 120));
+  }
+
+  isPlaying = false;
+  btn.disabled = false;
+  btn.textContent = '▶ 全部連讀';
+});
+
+// ─── Pre-load voices ─────────────────────────────────
+if (window.speechSynthesis) {
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
+}
+</script>
+</body>
+</html>
